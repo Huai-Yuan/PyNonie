@@ -21,7 +21,8 @@
 			"extensions": [
 				"ms-azuretools.vscode-docker",
 				"ms-python.python",
-				"ms-python.flake8"
+				"ms-python.flake8",
+				"github.vscode-github-actions"
 			]
 		}
 	}
