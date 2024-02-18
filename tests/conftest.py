@@ -2,8 +2,8 @@ import os
 import tempfile
 
 import pytest
-from PyNonie import create_app
-from PyNonie.db import get_db, init_db
+from pynonie import create_app
+from pynonie.db import get_db, init_db
 
 with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
     _data_sql = f.read().decode('utf8')

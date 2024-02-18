@@ -1,6 +1,6 @@
 import pytest
 from flask import g, session
-from PyNonie.db import get_db
+from pynonie.db import get_db
 
 
 def test_register(client, app):

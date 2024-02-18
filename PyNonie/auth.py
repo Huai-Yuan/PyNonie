@@ -1,3 +1,6 @@
+'''
+authentication functions
+'''
 import functools
 
 from flask import (
@@ -5,13 +8,19 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from PyNonie.db import get_db
+from pynonie.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
+    '''
+    Register a new user.
+
+    Returns:
+        A redirect to the login page if registration is successful, otherwise renders the registration page.
+    '''
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -26,14 +35,14 @@ def register():
         if error is None:
             try:
                 db.execute(
-                    "INSERT INTO user (username, password) VALUES (?, ?)",
+                    'INSERT INTO user (username, password) VALUES (?, ?)',
                     (username, generate_password_hash(password)),
                 )
                 db.commit()
             except db.IntegrityError:
-                error = f"User {username} is already registered."
+                error = f'User {username} is already registered.'
             else:
-                return redirect(url_for("auth.login"))
+                return redirect(url_for('auth.login'))
 
         flash(error)
 
@@ -42,6 +51,13 @@ def register():
 
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
+    '''
+    Handle user login.
+
+    Returns:
+        The rendered login page if the request method is GET or if
+        the login was unsuccessful. Otherwise, a redirect to the index page.
+    '''
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -68,6 +84,12 @@ def login():
 
 @bp.before_app_request
 def load_logged_in_user():
+    '''
+    Load the currently logged-in user from the session.
+
+    If the user is logged in, the `g.user` global variable will be set to the user's information.
+    If the user is not logged in, `g.user` will be set to None.
+    '''
     user_id = session.get('user_id')
 
     if user_id is None:
@@ -80,11 +102,26 @@ def load_logged_in_user():
 
 @bp.route('/logout')
 def logout():
+    '''
+    Logout function that clears the session and redirects to the index page.
+
+    Returns:
+        A redirect to the index page.
+    '''
     session.clear()
     return redirect(url_for('index'))
 
 
 def login_required(view):
+    '''
+    A decorator that redirects users to the login page if they are not logged in.
+
+    Parameters:
+        view: The view function to be wrapped.
+
+    Returns:
+        The wrapped view function.
+    '''
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if g.user is None:

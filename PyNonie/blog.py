@@ -1,16 +1,25 @@
+'''
+blog posts functions
+'''
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 from werkzeug.exceptions import abort
 
-from PyNonie.auth import login_required
-from PyNonie.db import get_db
+from pynonie.auth import login_required
+from pynonie.db import get_db
 
 bp = Blueprint('blog', __name__)
 
 
 @bp.route('/')
 def index():
+    '''
+    Render the blog index page.
+
+    Returns:
+        HTML content of the blog index page.
+    '''
     db = get_db()
     posts = db.execute(
         'SELECT p.id, title, body, created, author_id, username'
@@ -23,6 +32,12 @@ def index():
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required
 def create():
+    '''
+    This function handles the creation of blog posts.
+
+    Returns:
+        If a post is successfully created, it redirects the user to the index page of the blog.
+    '''
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
@@ -46,16 +61,26 @@ def create():
     return render_template('blog/create.html')
 
 
-def get_post(id, check_author=True):
+def get_post(post_id, check_author=True):
+    '''
+    Get a post by its ID.
+
+    Parameters:
+        post_id: The ID of the post.
+        check_author: A boolean indicating whether to check the author of the post.
+
+    Returns:
+        The post if found, otherwise raise a 404 error.
+    '''
     post = get_db().execute(
         'SELECT p.id, title, body, created, author_id, username'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' WHERE p.id = ?',
-        (id,)
+        (post_id,)
     ).fetchone()
 
     if post is None:
-        abort(404, f"Post id {id} doesn't exist.")
+        abort(404, f"Post id {post_id} doesn't exist.")
 
     if check_author and post['author_id'] != g.user['id']:
         abort(403)
@@ -63,10 +88,19 @@ def get_post(id, check_author=True):
     return post
 
 
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+@bp.route('/<int:post_id>/update', methods=('GET', 'POST'))
 @login_required
-def update(id):
-    post = get_post(id)
+def update(post_id):
+    '''
+    Update a post.
+
+    Parameters:
+        post_id: The id of the post to update.
+
+    Returns:
+        A redirect to the index page or the update page.
+    '''
+    post = get_post(post_id)
 
     if request.method == 'POST':
         title = request.form['title']
@@ -83,7 +117,7 @@ def update(id):
             db.execute(
                 'UPDATE post SET title = ?, body = ?'
                 ' WHERE id = ?',
-                (title, body, id)
+                (title, body, post_id)
             )
             db.commit()
             return redirect(url_for('blog.index'))
@@ -91,11 +125,20 @@ def update(id):
     return render_template('blog/update.html', post=post)
 
 
-@bp.route('/<int:id>/delete', methods=('POST',))
+@bp.route('/<int:post_id>/delete', methods=('POST',))
 @login_required
-def delete(id):
-    get_post(id)
+def delete(post_id):
+    '''
+    Delete a post with the given post_id.
+
+    Parameters:
+        post_id: The id of the post to delete.
+
+    Returns:
+        A redirect to the blog index page.
+    '''
+    get_post(post_id)
     db = get_db()
-    db.execute('DELETE FROM post WHERE id = ?', (id,))
+    db.execute('DELETE FROM post WHERE id = ?', (post_id,))
     db.commit()
     return redirect(url_for('blog.index'))

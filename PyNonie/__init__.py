@@ -1,9 +1,22 @@
+'''
+flask app
+'''
 import os
 
 from flask import Flask
 
 
+# pylint: disable=C0415
 def create_app(test_config=None):
+    '''
+    Create and configure the Flask app.
+
+    Parameters:
+        test_config (dict, optional): The test configuration. Defaults to None.
+
+    Returns:
+        flask.Flask: The configured Flask app.
+    '''
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
