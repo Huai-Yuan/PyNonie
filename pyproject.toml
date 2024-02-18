@@ -10,5 +10,11 @@ dependencies = [
 requires = ["flit_core<4"]
 build-backend = "flit_core.buildapi"
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.coverage.run]
-source = ["PyNonie"]
+source = ["pynonie"]
+
+[tool.pylint.format]
+max-line-length = 127

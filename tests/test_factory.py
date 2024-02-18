@@ -1,4 +1,4 @@
-from PyNonie import create_app
+from pynonie import create_app
 
 
 def test_config():
