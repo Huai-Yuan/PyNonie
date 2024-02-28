@@ -2,8 +2,10 @@ import os
 import tempfile
 
 import pytest
-from pynonie import create_app
-from pynonie.db import get_db, init_db
+from flask import Flask
+from flask.testing import FlaskClient
+from nonie_server import create_app
+from nonie_server.db import get_db, init_db
 
 with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
     _data_sql = f.read().decode('utf8')
@@ -29,27 +31,27 @@ def app():
 
 
 @pytest.fixture
-def client(app):
+def client(app: Flask):
     return app.test_client()
 
 
 @pytest.fixture
-def runner(app):
+def runner(app: Flask):
     return app.test_cli_runner()
 
 
-class AuthActions(object):
-    def __init__(self, client):
+class AuthActions:
+    def __init__(self, client: FlaskClient):
         self._client = client
 
     def login(self, username='test', password='test'):
         return self._client.post(
-            '/auth/login',
+            '/api/v1/user/login',
             data={'username': username, 'password': password}
         )
 
     def logout(self):
-        return self._client.get('/auth/logout')
+        return self._client.get('/api/v1/user/logout')
 
 
 @pytest.fixture

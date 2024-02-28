@@ -1,9 +1,10 @@
 [project]
-name = "PyNoine"
+name = "nonie_server"
 version = "1.0.0"
 description = "The basic blog app built in the Flask tutorial."
 dependencies = [
-    "flask",
+    "Flask",
+    "Flask-RESTful"
 ]
 
 [build-system]
@@ -14,7 +15,7 @@ build-backend = "flit_core.buildapi"
 pythonpath = ["."]
 
 [tool.coverage.run]
-source = ["pynonie"]
+source = ["nonie_server"]
 
 [tool.pylint.format]
 max-line-length = 127

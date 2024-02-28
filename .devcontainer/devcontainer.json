@@ -13,7 +13,7 @@
 	"forwardPorts": [5000],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "flask --app pynonie run --debug",
+	// "postCreateCommand": "flask --app pynonie run --debug",
 
 	// Configure tool-specific properties.
 	"customizations": {
@@ -22,6 +22,7 @@
 				"ms-azuretools.vscode-docker",
 				"ms-python.python",
 				"ms-python.pylint",
+				"ms-python.autopep8",
 				"github.vscode-github-actions"
 			]
 		}
