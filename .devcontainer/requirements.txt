@@ -1,4 +1,5 @@
 coverage
 Flask
+Flask-RESTful
 pylint
 pytest

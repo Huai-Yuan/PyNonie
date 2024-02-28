@@ -1,10 +1,12 @@
-import sqlite3
-
 import pytest
-from pynonie.db import get_db
+import sqlite3
+from flask import Flask
+from flask.testing import FlaskCliRunner
+from pytest import MonkeyPatch
+from nonie_server.db import get_db
 
 
-def test_get_close_db(app):
+def test_get_close_db(app: Flask):
     with app.app_context():
         db = get_db()
         assert db is get_db()
@@ -15,14 +17,14 @@ def test_get_close_db(app):
     assert 'closed' in str(e.value)
 
 
-def test_init_db_command(runner, monkeypatch):
+def test_init_db_command(runner: FlaskCliRunner, monkeypatch: MonkeyPatch):
     class Recorder(object):
         called = False
 
     def fake_init_db():
         Recorder.called = True
 
-    monkeypatch.setattr('pynonie.db.init_db', fake_init_db)
+    monkeypatch.setattr('nonie_server.db.init_db', fake_init_db)
     result = runner.invoke(args=['init-db'])
     assert 'Initialized' in result.output
     assert Recorder.called

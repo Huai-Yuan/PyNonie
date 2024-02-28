@@ -1,5 +1,8 @@
 {
     "pylint.args": [
         "\"pylint.args\": [\"--ignore=tests\", \"--max-line-length=120\"]"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    }
 }

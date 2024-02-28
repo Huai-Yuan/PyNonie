@@ -1,32 +1,27 @@
 import pytest
-from pynonie.db import get_db
+from flask import Flask
+from flask.testing import FlaskClient
+from nonie_server.db import get_db
 
 
-def test_index(client, auth):
-    response = client.get('/')
-    assert b"Log In" in response.data
-    assert b"Register" in response.data
-
-    auth.login()
-    response = client.get('/')
-    assert b'Log Out' in response.data
-    assert b'test title' in response.data
-    assert b'by test on 2018-01-01' in response.data
-    assert b'test\nbody' in response.data
-    assert b'href="/1/update"' in response.data
-
-
-@pytest.mark.parametrize('path', (
-    '/create',
-    '/1/update',
-    '/1/delete',
+@pytest.mark.parametrize(('path', 'method'), (
+    ('/api/v1/blog/create', 'post'),
+    ('/api/v1/blog/1', 'put'),
+    ('/api/v1/blog/1', 'delete'),
 ))
-def test_login_required(client, path):
-    response = client.post(path)
-    assert response.headers["Location"] == "/auth/login"
+def test_login_required(client: FlaskClient, path, method):
+    if method == 'post':
+        response = client.post(path)
+    elif method == 'get':
+        response = client.get(path)
+    elif method == 'put':
+        response = client.put(path)
+    elif method == 'delete':
+        response = client.delete(path)
+    assert b'Login required!' in response.data
 
 
-def test_author_required(app, client, auth):
+def test_author_required(app: Flask, client: FlaskClient, auth):
     # change the post author to another user
     with app.app_context():
         db = get_db()
@@ -35,25 +30,26 @@ def test_author_required(app, client, auth):
 
     auth.login()
     # current user can't modify other user's post
-    assert client.post('/1/update').status_code == 403
-    assert client.post('/1/delete').status_code == 403
-    # current user doesn't see edit link
-    assert b'href="/1/update"' not in client.get('/').data
+    assert client.put('/api/v1/blog/1').status_code == 403
+    assert client.delete('/api/v1/blog/1').status_code == 403
 
 
-@pytest.mark.parametrize('path', (
-    '/2/update',
-    '/2/delete',
+@pytest.mark.parametrize(('path', 'method'), (
+    ('/api/v1/blog/2', 'put'),
+    ('/api/v1/blog/2', 'delete'),
 ))
-def test_exists_required(client, auth, path):
+def test_exists_required(client: FlaskClient, auth, path, method):
     auth.login()
-    assert client.post(path).status_code == 404
+    if method == 'put':
+        response = client.put(path)
+    elif method == 'delete':
+        response = client.delete(path)
+    assert response.status_code == 404
 
 
-def test_create(client, auth, app):
+def test_create(client: FlaskClient, auth, app):
     auth.login()
-    assert client.get('/create').status_code == 200
-    client.post('/create', data={'title': 'created', 'body': ''})
+    client.post('/api/v1/blog/create', data={'title': 'created', 'body': ''})
 
     with app.app_context():
         db = get_db()
@@ -61,10 +57,9 @@ def test_create(client, auth, app):
         assert count == 2
 
 
-def test_update(client, auth, app):
+def test_update(client: FlaskClient, auth, app):
     auth.login()
-    assert client.get('/1/update').status_code == 200
-    client.post('/1/update', data={'title': 'updated', 'body': ''})
+    client.put('/api/v1/blog/1', data={'title': 'updated', 'body': ''})
 
     with app.app_context():
         db = get_db()
@@ -72,21 +67,22 @@ def test_update(client, auth, app):
         assert post['title'] == 'updated'
 
 
-@pytest.mark.parametrize('path', (
-    '/create',
-    '/1/update',
+@pytest.mark.parametrize(('path', 'method'), (
+    ('/api/v1/blog/create', 'post'),
+    ('/api/v1/blog/1', 'put'),
 ))
-def test_create_update_validate(client, auth, path):
+def test_create_update_validate(client: FlaskClient, auth, path, method):
     auth.login()
-    response = client.post(path, data={'title': '', 'body': ''})
+    if method == 'post':
+        response = client.post(path, data={'title': '', 'body': ''})
+    elif method == 'put':
+        response = client.put(path, data={'title': '', 'body': ''})
     assert b'Title is required.' in response.data
 
 
-def test_delete(client, auth, app):
+def test_delete(client: FlaskClient, auth, app):
     auth.login()
-    response = client.post('/1/delete')
-    assert response.headers["Location"] == "/"
-
+    client.delete('/api/v1/blog/1')
     with app.app_context():
         db = get_db()
         post = db.execute('SELECT * FROM post WHERE id = 1').fetchone()
